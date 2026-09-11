@@ -1,0 +1,35 @@
+services:
+  otbr:
+    container_name: otbr
+    image: ghcr.io/nelletto/hass-otbr-docker
+    restart: unless-stopped
+    privileged: true # don't change this !
+    network_mode: host # don't change this !
+    cap_add:
+      - SYS_ADMIN
+      - NET_ADMIN
+    environment:
+      DEVICE: "/dev/ttyACM0"
+      BACKBONE_IF: eth0
+      # The MG24 seems to require this to be off
+      FLOW_CONTROL: 0
+      FIREWALL: 1
+      NAT64: 1
+      BAUDRATE: 460800
+      OTBR_REST_PORT: 8081
+      OTBR_WEB_PORT: 7586
+      # OTBR_WEB_INTERFACE: "0.0.0.0"
+      AUTOFLASH_FIRMWARE: 0
+      # BETA: 1
+      OTBR_LOG_LEVEL: info
+    devices:
+      # Do not map the by-id path into the container, this does not seem to work.
+      - /dev/serial/by-id/usb-SONOFF_SONOFF_Dongle_Plus_MG24_abc-if00-port0:/dev/ttyACM0
+      - /dev/net/tun:/dev/net/tun
+    volumes:
+      - ./otbr_data:/data/thread
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "3"
+        max-size: "1m"
