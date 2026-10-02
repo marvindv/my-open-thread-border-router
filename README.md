@@ -19,14 +19,21 @@ Standalone OpenThread Border Router to be integrated into Home Assistant via eth
 1. Install Docker
 2. Enable IPv6 support on local network.
 3. Enable mDNS and IGMP snooping on the network.
-4. Configured the docker host with the following sysctl:
+4. Configured the docker host with the following sysctl (replace `eth0` with `wlan0` or a different interface, depending on what is used to connect to the local network):
+
    ```bash
-   sysctl net.ipv6.conf.all.disable_ipv6=0
-   sysctl net.ipv4.conf.all.forwarding=1
-   sysctl net.ipv6.conf.all.forwarding=1
-   sysctl net.ipv6.conf.all.accept_ra_rt_info_max_plen=64
-   sysctl net.ipv6.conf.all.accept_ra=2
+   sudo tee /etc/sysctl.d/99-otbr.conf <<'EOF'
+   net.ipv6.conf.all.disable_ipv6 = 0
+   net.ipv4.ip_forward = 1
+   net.ipv6.conf.all.forwarding = 1
+   net.ipv6.conf.eth0.accept_ra_rt_info_max_plen = 64
+   net.ipv6.conf.eth0.accept_ra = 2
+   EOF
+   sudo sysctl --system
    ```
+
+   IPv6 forwarding is required so that other hosts (like the Matter server) are able to reach Thread devices. If forwarding is activated, `accept_ra` has to be set to `2` to still accept Router Advertisements, which might contain _Route Information Options_ for the OMR prefix of other Border Routers.
+
 5. Look up the baudrate for the device, for the Sonoff Dongle Plus MG24 it is 460800.
 6. On the docker host:
    ```bash
